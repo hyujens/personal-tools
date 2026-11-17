@@ -1,0 +1,44 @@
+# syntax=docker/dockerfile:1
+FROM devenv-base:latest
+
+USER root
+
+RUN dnf -y update
+RUN dnf -y install clang++ clang-tools-extra && dnf clean all
+
+USER developer
+
+RUN <<'EOF'
+cat > /home/developer/.config/nvim/lazyvim.json <<'JSON'
+{
+  "extras": [
+    "lazyvim.plugins.extras.lang.clangd"
+  ],
+  "version": 8
+}
+JSON
+EOF
+
+
+# Mason cannot install clangd in the Linux ARM64 container because
+# its package registry does not provide a compatible prebuilt binary.
+# Therefore, we install clangd directly via Fedora's package manager
+# instead of relying on Mason.
+RUN << 'EOF'
+cat > /home/developer/.config/nvim/lua/plugins/clangd.lua << 'JSON'
+return {
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      servers = {
+        clangd = {
+          mason = false,
+        },
+      },
+    },
+  },
+}
+JSON
+EOF
+
+RUN nvim --headless "+Lazy! sync " +qa

@@ -1,0 +1,27 @@
+# syntax=docker/dockerfile:1
+FROM devenv-base:latest
+
+USER developer
+
+ENV VIRTUAL_ENV="/home/developer/.venv" \
+    PATH="/home/developer/.venv/bin:/home/developer/.local/bin:$PATH" \
+    UV_LINK_MODE=copy
+
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+
+RUN uv venv /home/developer/.venv
+
+
+RUN <<'EOF'
+cat > /home/developer/.config/nvim/lazyvim.json <<'JSON'
+{
+  "extras": [
+    "lazyvim.plugins.extras.lang.python"
+  ],
+  "version": 8
+}
+JSON
+EOF
+
+RUN nvim --headless "+Lazy! sync " +qa
+CMD ["bash"]

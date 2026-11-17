@@ -1,0 +1,22 @@
+# syntax=docker/dockerfile:1
+FROM devenv-base:latest
+
+USER root
+
+RUN dnf -y update
+RUN dnf -y install go && dnf clean all
+
+USER developer
+
+RUN <<'EOF'
+cat > /home/developer/.config/nvim/lazyvim.json <<'JSON'
+{
+  "extras": [
+    "lazyvim.plugins.extras.lang.go"
+  ],
+  "version": 8
+}
+JSON
+EOF
+
+RUN nvim --headless "+Lazy! sync " +qa
